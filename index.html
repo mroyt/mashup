@@ -1,8 +1,88 @@
 <!DOCTYPE html>
+<!--
+in cmd prompt: use dir to look at current directory. use cd to navigate to the directory of the folder with my file.
+$ cd <this directory>
+$ python -m SimpleHTTPServer
+open http://localhost:8000/ajax.html
+-->
 <html>
   <head>
-    <title>Mashup</title>
+  	<title>Mashup</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <style type="text/css">
+      html { height: 100% }
+      body { height: 100%; margin: 0; padding: 0 }
+      #map-canvas { height: 100% }
+    </style>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBBBatpnQggE-ys0y9gAzo6_KfzgBDNK2E"></script>
+    <script type="text/javascript">
+    	/*
+		var Venue = function(lat,lng){
+    			this.latitude = lat;
+    			this.longitude = lng;
+    	};
+    	var centerVenue;
+    	var centerLoc = "upper+east+side%2CNY";    	
+    	var geoMapApi = function(){
+	    	$.get("https://maps.googleapis.com/maps/api/geocode/json?address="+centerLoc+"&key=AIzaSyBBBatpnQggE-ys0y9gAzo6_KfzgBDNK2E",
+	    		function(data){
+	    			centerVenue.call(global,new Venue(data.results[0].geometry.location.lat, data.results[0].geometry.location.lng));
+	    			console.log("in geoMapApi " +data.results[0].geometry.location.lat);
+	    			console.log("in geoMap + object "+centerVenue.longitude);
+
+	    		});
+	    };
+	*/
+    	var myLatlng,marker,map,mapOptions;
+		google.maps.event.addDomListener(window, 'load', initialize);
+
+		var fourSquareApi = function(lat,lng){
+			var query = "watch+world+cup";
+			var locationLL = lat+"%2C"+lng;//"upper+east+side%2C+ny";
+			console.log(locationLL);
+		    var link = "https://api.foursquare.com/v2/tips/search?openNow=1&radius=1000&client_id=1OSDSTMNVKFRSNEBVPDZCL5RPR32GGBZY315J3RXJT0NHD4X&client_secret=TCT3JL53CY53VJUHBYXBKIC0VSIT0L5YWEIUD0EZ35W1WF5Q&v=20130815&ll="+locationLL+"&query="+query;
+		    var thisLat, thisLng, thisName, thisAddress;
+		    jQuery.get(link,function(data){
+		    	console.log(data.response.tips[1].venue.location.lat);
+		    	console.log(data.response.tips[1].venue.location.lng);
+		    	addLayerToMap(data);
+		    });
+		};
+	    var addLayerToMap = function(fourSqOutput){
+	    	console.log(fourSqOutput);
+		    for (i=0;i<fourSqOutput.response.tips.length;i++){
+				thisLat = fourSqOutput.response.tips[i].venue.location.lat;
+				thisLng = fourSqOutput.response.tips[i].venue.location.lng;
+				thisName = fourSqOutput.response.tips[i].venue.name;
+				thisAddress = fourSqOutput.response.tips[i].venue.location.address;
+				console.log(thisLat +", "+thisLng);
+				myLatlng = new google.maps.LatLng(thisLat,thisLng);
+				// To add the marker to the map, use the 'map' property
+				marker = new google.maps.Marker({
+				    position: myLatlng,
+				    map: map,
+				    title: thisName
+				});
+		    }
+	    };
+	  	function initialize() {
+        	//geoMapApi();
+        	//console.log(centerVenue.latitude);
+        		mapOptions = {
+	        		center: new google.maps.LatLng(40.7577, -73.9857),
+	          		zoom: 13
+	        	};
+	        	console.log(mapOptions.center);
+	        	map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
+	        	
+        	fourSquareApi(40.7577,-73.9857);
+      	}
+
+    </script>
   </head>
   <body>
+  	<div id = "location"></div>
+    <div id="map-canvas"/>
   </body>
 </html>
