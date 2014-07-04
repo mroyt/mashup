@@ -1,88 +1,93 @@
 <!DOCTYPE html>
-<!--
-in cmd prompt: use dir to look at current directory. use cd to navigate to the directory of the folder with my file.
-$ cd <this directory>
-$ python -m SimpleHTTPServer
-open http://localhost:8000/ajax.html
--->
+<!--This mashup app searches foursquare tips within a selected neighborhood for the keywords you choose and places the
+results on a Google map. This also makes use of a 3rd API: it uses Google geocoding to find the latitude and longitude
+of your neighborhood -->
 <html>
   <head>
   	<title>Mashup</title>
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
-    <style type="text/css">
-      html { height: 100% }
-      body { height: 100%; margin: 0; padding: 0 }
-      #map-canvas { height: 100% }
-    </style>
+    <link rel="stylesheet" type="text/css" href="css/index.css">
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
     <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBBBatpnQggE-ys0y9gAzo6_KfzgBDNK2E"></script>
+	<script type="text/javascript" src="js/foursquare.js"></script>
+	<script type="text/javascript" src="js/geocode.js"></script>
+	<script type="text/javascript" src="js/maps.js"></script>    
     <script type="text/javascript">
-    	/*
-		var Venue = function(lat,lng){
-    			this.latitude = lat;
-    			this.longitude = lng;
-    	};
-    	var centerVenue;
-    	var centerLoc = "upper+east+side%2CNY";    	
-    	var geoMapApi = function(){
-	    	$.get("https://maps.googleapis.com/maps/api/geocode/json?address="+centerLoc+"&key=AIzaSyBBBatpnQggE-ys0y9gAzo6_KfzgBDNK2E",
-	    		function(data){
-	    			centerVenue.call(global,new Venue(data.results[0].geometry.location.lat, data.results[0].geometry.location.lng));
-	    			console.log("in geoMapApi " +data.results[0].geometry.location.lat);
-	    			console.log("in geoMap + object "+centerVenue.longitude);
-
-	    		});
-	    };
-	*/
-    	var myLatlng,marker,map,mapOptions;
-		google.maps.event.addDomListener(window, 'load', initialize);
-
-		var fourSquareApi = function(lat,lng){
-			var query = "watch+world+cup";
-			var locationLL = lat+"%2C"+lng;//"upper+east+side%2C+ny";
-			console.log(locationLL);
-		    var link = "https://api.foursquare.com/v2/tips/search?openNow=1&radius=1000&client_id=1OSDSTMNVKFRSNEBVPDZCL5RPR32GGBZY315J3RXJT0NHD4X&client_secret=TCT3JL53CY53VJUHBYXBKIC0VSIT0L5YWEIUD0EZ35W1WF5Q&v=20130815&ll="+locationLL+"&query="+query;
-		    var thisLat, thisLng, thisName, thisAddress;
-		    jQuery.get(link,function(data){
-		    	console.log(data.response.tips[1].venue.location.lat);
-		    	console.log(data.response.tips[1].venue.location.lng);
-		    	addLayerToMap(data);
-		    });
-		};
-	    var addLayerToMap = function(fourSqOutput){
-	    	console.log(fourSqOutput);
-		    for (i=0;i<fourSqOutput.response.tips.length;i++){
-				thisLat = fourSqOutput.response.tips[i].venue.location.lat;
-				thisLng = fourSqOutput.response.tips[i].venue.location.lng;
-				thisName = fourSqOutput.response.tips[i].venue.name;
-				thisAddress = fourSqOutput.response.tips[i].venue.location.address;
-				console.log(thisLat +", "+thisLng);
-				myLatlng = new google.maps.LatLng(thisLat,thisLng);
-				// To add the marker to the map, use the 'map' property
-				marker = new google.maps.Marker({
-				    position: myLatlng,
-				    map: map,
-				    title: thisName
-				});
-		    }
-	    };
-	  	function initialize() {
-        	//geoMapApi();
-        	//console.log(centerVenue.latitude);
-        		mapOptions = {
-	        		center: new google.maps.LatLng(40.7577, -73.9857),
-	          		zoom: 13
-	        	};
-	        	console.log(mapOptions.center);
-	        	map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
-	        	
-        	fourSquareApi(40.7577,-73.9857);
-      	}
-
-    </script>
+	$(document).ready(function(){
+		onloadView();
+		$("#find").on("click",function(){
+			var centerLoc = document.getElementById('neighborhood').value+"%2CNYC";
+			var searchTerm = encodeURIComponent(document.getElementById('search_terms').value);
+			getCoordinates(centerLoc,function(){
+				initialize(centralLat_global,centralLng_global,searchTerm);
+			});
+		})
+	});
+  </script>
   </head>
+  
   <body>
-  	<div id = "location"></div>
-    <div id="map-canvas"/>
+  	<div id="wrapper">
+	  	<header>
+	  		<h1>Find Some Fun!</h1>
+	  		<h3>Use this tool to search for fun in your (Manhattan) neighborhood, using any terms you want.</h3>
+		</header>
+	  	<div id = "location">
+	  		<table>
+	  		<tr><td><div class="question">What neighborhood?</div></td>
+	  		<td><select id="neighborhood" class="question">
+  				<option>Battery Park City</option>
+				<option>Beekman Place</option>
+				<option>Carnegie Hill</option>
+				<option>Chelsea</option>
+				<option>Chinatown</option>
+				<option>Civic Center</option>
+				<option>Clinton</option>
+				<option>East Harlem</option>
+				<option>East Village</option>
+				<option>Financial District</option>
+				<option>Flatiron</option>
+				<option>Gramercy</option>
+				<option>Greenwich Village</option>
+				<option>Hamilton Heights</option>
+				<option>Harlem (Central)</option>
+				<option>Herald Square</option>
+				<option>Hudson Square</option>
+				<option>Inwood</option>
+				<option>Lenox Hill</option>
+				<option>Lincoln Square</option>
+				<option>Little Italy</option>
+				<option>Lower East Side</option>
+				<option>Manhattan Valley</option>
+				<option>Manhattanville</option>
+				<option>Midtown</option>
+				<option>Midtown South</option>
+				<option>Morningside Heights</option>
+				<option>Murray Hill</option>
+				<option>NoHo</option>
+				<option>Roosevelt Island</option>
+				<option>SoHo</option>
+				<option>South Village</option>
+				<option>Stuyvesant Town</option>
+				<option>Sutton Place</option>
+				<option>Times Square</option>
+				<option>Tribeca</option>
+				<option>Tudor City</option>
+				<option>Turtle Bay</option>
+				<option>Union Square</option>
+				<option>Upper East Side</option>
+				<option>Upper West Side</option>
+				<option>Wall Street</option>
+				<option>Washington Heights</option>
+				<option>West Village</option>
+				<option>Yorkville</option>
+			</select></td></tr><tr><td>
+			<div class="question">What're you looking for?</div></td><td>
+			<input id="search_terms" class="question" type="text" name="search"></td></tr>
+	  		</table>
+			<input type="submit" value="Find me a venue!" id="find">
+	  	</div>
+	    <div id="map-canvas"/>
+  	</div>
   </body>
 </html>
